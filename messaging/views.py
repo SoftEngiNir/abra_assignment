@@ -1,4 +1,5 @@
 from datetime import datetime
+from django.core.exceptions import ObjectDoesNotExist
 
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import render
@@ -57,15 +58,39 @@ class SendMessageView(CreateView):
             )
             return HttpResponse(f"Failed to send message. Errors: {errors}")
 
+def get_user(user_id):
+    if not user_id:
+        return JsonResponse({'error': 'User ID is required'}, status=400)
+
+    try:
+        user_instance = User.objects.get(pk=user_id)
+    except (ObjectDoesNotExist, ValueError):
+        return JsonResponse({'error': 'User not found'}, status=404)
+    return user_instance
+
 
 class MessagesListView(ListView):
 
     def get(self, request: HttpRequest):
         user_id = request.GET.get('user_id')
-        user_instance = User.objects.get(pk=user_id)
+
+        user_instance = get_user(user_id)
+        
         messages = Message.objects.filter(sender=user_instance)
         return JsonResponse(list(messages.values()), safe=False)
     
+class UnreadMessagesListView(ListView):
+
+    def get(self, request: HttpRequest):
+        user_id = request.GET.get('user_id')
+
+        user_instance = get_user(user_id)
+        
+        unread_messages = Message.objects.filter(messageuserlink__receiver_id=user_id, messageuserlink__is_read=False)
+
+
+        return JsonResponse(list(unread_messages.values()), safe=False)
+
 
 
 
