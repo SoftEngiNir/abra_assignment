@@ -82,13 +82,13 @@ WSGI_APPLICATION = "messaging_system.wsgi.application"
 # }
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'd7ejg7f1cdovlp', 
-        'USER': 'ufm15g6pv5os1',
-        'PASSWORD': 'pbf1346491e6ff1bf9bf13c552f1973f1445e10211c78915b42c39609d4476849',
-        'HOST': 'c2dr1dq7r4d57i.cluster-czz5s0kz4scl.eu-west-1.rds.amazonaws.com', 
-        'PORT': '5432',
+    "default": {
+        "ENGINE": "django.db.backends.postgresql_psycopg2",
+        "NAME": "d7ejg7f1cdovlp",
+        "USER": "ufm15g6pv5os1",
+        "PASSWORD": "pbf1346491e6ff1bf9bf13c552f1973f1445e10211c78915b42c39609d4476849",
+        "HOST": "c2dr1dq7r4d57i.cluster-czz5s0kz4scl.eu-west-1.rds.amazonaws.com",
+        "PORT": "5432",
     }
 }
 

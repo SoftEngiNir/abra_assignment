@@ -10,10 +10,11 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
-from pathlib import Path
 import os
-import django_heroku
+from pathlib import Path
+
 import dj_database_url
+import django_heroku
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -28,7 +29,9 @@ SECRET_KEY = "django-insecure-1ak$9yk%b80eftc92e3ws@lvlth^st@dy^7!m8ao_(5dgdivsn
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*',]
+ALLOWED_HOSTS = [
+    "*",
+]
 
 
 # Application definition
@@ -80,13 +83,13 @@ WSGI_APPLICATION = "messaging_system.wsgi.application"
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'd7ejg7f1cdovlp', 
-        'USER': 'ufm15g6pv5os1',
-        'PASSWORD': 'pbf1346491e6ff1bf9bf13c552f1973f1445e10211c78915b42c39609d4476849',
-        'HOST': 'c2dr1dq7r4d57i.cluster-czz5s0kz4scl.eu-west-1.rds.amazonaws.com', 
-        'PORT': '5432',
+    "default": {
+        "ENGINE": "django.db.backends.postgresql_psycopg2",
+        "NAME": "d7ejg7f1cdovlp",
+        "USER": "ufm15g6pv5os1",
+        "PASSWORD": "pbf1346491e6ff1bf9bf13c552f1973f1445e10211c78915b42c39609d4476849",
+        "HOST": "c2dr1dq7r4d57i.cluster-czz5s0kz4scl.eu-west-1.rds.amazonaws.com",
+        "PORT": "5432",
     }
 }
 
@@ -129,9 +132,9 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 # STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static'), )
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
@@ -140,3 +143,6 @@ django_heroku.settings(locals())
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+CSRF_TRUSTED_ORIGINS = ["http://127.0.0.1/"]
+
+CSRF_COOKIE_SECURE = False
