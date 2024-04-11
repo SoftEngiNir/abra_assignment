@@ -1,11 +1,13 @@
 from datetime import datetime
 
-from django.http import HttpRequest, HttpResponse
+from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
+
+from django.views.generic import CreateView, DetailView, DeleteView, ListView
 
 from .forms import SendMessageForm
 from .models import Message, MessageUserLink, User
@@ -33,7 +35,7 @@ def create_db_message_user_link(receiver_id, message_instance):
 
 
 @method_decorator(csrf_exempt, name="dispatch")
-class SendMessageView(View):
+class SendMessageView(CreateView):
     def post(self, request: HttpRequest):
         sender_id = request.GET.get("sender_id")
         message = request.GET.get("message")
@@ -55,9 +57,16 @@ class SendMessageView(View):
             )
             return HttpResponse(f"Failed to send message. Errors: {errors}")
 
+
+class MessagesListView(ListView):
+
     def get(self, request: HttpRequest):
-        users = User.objects.all()
-        return HttpResponse(users)
+        user_id = request.GET.get('user_id')
+        user_instance = User.objects.get(pk=user_id)
+        messages = Message.objects.filter(sender=user_instance)
+        return JsonResponse(list(messages.values()), safe=False)
+    
+
 
 
 # >>> b = Blog(name="Beatles Blog", tagline="All the latest Beatles news.")
