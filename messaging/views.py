@@ -33,7 +33,7 @@ def create_db_message_user_link(receiver_id, message_instance):
 
 
 @method_decorator(csrf_exempt, name="dispatch")
-class MessageCreateView(View):
+class SendMessageView(View):
     def post(self, request: HttpRequest):
         sender_id = request.GET.get("sender_id")
         message = request.GET.get("message")
