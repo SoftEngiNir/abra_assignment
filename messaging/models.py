@@ -1,23 +1,15 @@
+from django.contrib.auth.models import User
 from django.db import models
 
 
-class User(models.Model):
-    first_name = models.CharField(max_length=50)
-    last_name = models.CharField(max_length=50)
-    email = models.CharField(max_length=50)
-
-    # def __str__(self):
-    #     return self.first_name + ' ' + self.last_name
-
-
 class Message(models.Model):
-    sender = models.ForeignKey(User, on_delete=models.DO_NOTHING)
+    sender = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name="sender")
+    receiver = models.ForeignKey(
+        User, on_delete=models.DO_NOTHING, related_name="receiver"
+    )
+    subject = models.CharField(max_length=50)
     message = models.CharField(max_length=500)
-    subject = models.CharField()
     creation_datetime = models.DateTimeField()
-
-
-class MessageUserLink(models.Model):
-    message = models.ForeignKey(Message, on_delete=models.DO_NOTHING)
-    receiver = models.ForeignKey(User, on_delete=models.CASCADE)
     is_read = models.BooleanField(default=False)
+    deleted_by_sender = models.BooleanField(default=False)
+    deleted_by_receiver = models.BooleanField(default=False)
