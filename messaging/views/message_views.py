@@ -6,16 +6,10 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
 
 from ..forms import SendMessageForm
-from .views_utils import (
-    create_db_message,
-    create_db_message_sent,
-    decode_bytes,
-    get_all_messages,
-    get_all_messages_received,
-    get_message,
-    get_message_received,
-    get_user,
-)
+from .views_utils import (create_db_message, create_db_message_sent,
+                          decode_bytes, get_all_messages,
+                          get_all_messages_received, get_message,
+                          get_message_received, get_user)
 
 
 @method_decorator(csrf_exempt, name="dispatch")
@@ -94,7 +88,9 @@ class ReceivedMessagesListView(ListView, LoginRequiredMixin):
                 {"error": f"User with ID {request.user.id} does not exist..."},
                 status=404,
             )
-        messages_received = get_all_messages_received(recipient=user_instance, deleted=False)
+        messages_received = get_all_messages_received(
+            recipient=user_instance, deleted=False
+        )
         return JsonResponse(list(messages_received.values()), safe=False)
 
 
@@ -143,7 +139,3 @@ class UpdateDeleteMessageRecievedView(UpdateView, LoginRequiredMixin):
             )
 
         return HttpResponse(f"Could not find message with id {message_id}")
-
-
-def index(request):
-    return HttpResponse("Hey bro")

@@ -3,7 +3,6 @@ from django.urls import path
 from .views import message_views, user_views
 
 urlpatterns = [
-    path("", message_views.index, name="index"),
     # Sent messages endpoints
     path(
         "sent/create",
