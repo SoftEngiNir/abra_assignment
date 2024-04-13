@@ -103,7 +103,7 @@ class UnreadMessagesListView(ListView, LoginRequiredMixin):
                 status=404,
             )
         unread_messages = get_all_messages_received(
-            recipient=user_instance, is_read=False
+            recipient=user_instance, deleted=False, is_read=False
         )
         return JsonResponse(list(unread_messages.values()), safe=False)
 
