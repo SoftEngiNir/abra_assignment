@@ -1,11 +1,9 @@
-from typing import List
+import json
+from typing import Dict
 
-from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models.query import QuerySet
-from django.forms.models import model_to_dict
-from django.http import HttpRequest, JsonResponse
 from django.utils import timezone
 
 from ..models import Message, MessageReceived
@@ -19,18 +17,18 @@ def get_user(user_id: int) -> User:
     return user_instance
 
 
-def get_message(message_id: int) -> Message:
+def get_message(message_id: int, **kwargs) -> Message:
     try:
-        message_instance = Message.objects.get(pk=message_id)
+        message_instance = Message.objects.get(pk=message_id, **kwargs)
     except (ObjectDoesNotExist, ValueError):
         return None
     return message_instance
 
 
-def get_message_received(recipient: int, message: int) -> MessageReceived:
+def get_message_received(recipient: int, message: int, **kwargs) -> MessageReceived:
     try:
         message_instance = MessageReceived.objects.get(
-            recipient=recipient, message=message
+            recipient=recipient, message=message, **kwargs
         )
     except (ObjectDoesNotExist, ValueError):
         return None
@@ -84,3 +82,8 @@ def create_db_user(
     )
     u.save()
     return u
+
+
+def decode_bytes(raw_bytes: bytes, encoding: str = "utf-8") -> Dict:
+    body_unicode = raw_bytes.decode(encoding)
+    return json.loads(body_unicode)
