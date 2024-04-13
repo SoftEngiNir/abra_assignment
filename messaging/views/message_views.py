@@ -1,3 +1,4 @@
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.forms.models import model_to_dict
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.utils.decorators import method_decorator
@@ -5,24 +6,30 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
 
 from ..forms import SendMessageForm
-from ..models import Message
-from .views_utils import create_db_message, get_user
+from .views_utils import (create_db_message, create_db_message_sent,
+                          get_all_messages, get_all_messages_received,
+                          get_message, get_message_received, get_user)
 
 
 @method_decorator(csrf_exempt, name="dispatch")
-class SendMessageView(CreateView):
-    def post(self, request: HttpRequest, sender_id, receiver_id, message, subject):
+class SendMessageView(CreateView, LoginRequiredMixin):
+    def post(self, request: HttpRequest, recipient_id, body, subject):
+        creator_id = request.user.id
+
         data = {
-            "sender_id": sender_id,
-            "receiver_id": receiver_id,
-            "message": message,
+            "creator_id": creator_id,
+            "recipient_id": recipient_id,
+            "body": body,
             "subject": subject,
         }
         form = SendMessageForm(data)
         if form.is_valid():
-            create_db_message(sender_id, receiver_id, message, subject)
+            creator_instance = get_user(creator_id)
+            recipient_instance = get_user(recipient_id)
 
-            return HttpResponse(f"Message sent to receiver with ID: {receiver_id}")
+            message_instance = create_db_message(creator_instance, body, subject)
+            create_db_message_sent(recipient_instance, message_instance)
+            return HttpResponse(f"Message sent to recipient with ID: {recipient_id}")
 
         else:
             errors = ", ".join(
@@ -31,48 +38,90 @@ class SendMessageView(CreateView):
             return HttpResponse(f"Failed to send message. Errors: {errors}")
 
 
-class ReadMessageView(DetailView):
-    def get(self, request, message_id):
-        try:
-            message = Message.objects.get(pk=message_id)
-            message.is_read = True
-            message.save()
-            return JsonResponse(
-                model_to_dict(
-                    message, fields=["id", "sender", "receiver", "subject", "message"]
-                )
-            )
-        except Message.DoesNotExist:
-            return JsonResponse({"error": "Message does not exist"}, status=404)
+class ReadMessageView(DetailView, LoginRequiredMixin):
+    def get(self, request: HttpRequest, message_id):
+        recipient_instance = get_user(request.user.id)
+
+        message_instance = get_message(message_id)
+        message_received = get_message_received(
+            recipient=recipient_instance, message=message_instance
+        )
+        if message_received:
+            message_received.is_read = True
+            message_received.save()
+
+            return JsonResponse(model_to_dict(message_received.message))
+
+        return JsonResponse({"error": "Message does not exist"}, status=404)
 
 
-class MessagesListView(ListView):
-    def get(self, request: HttpRequest, user_id):
-        user_instance = get_user(user_id)
+class MessagesListView(ListView, LoginRequiredMixin):
+    def get(self, request: HttpRequest):
+        user_instance = get_user(request.user.id)
         if not user_instance:
             return JsonResponse(
-                {"error": f"User with ID {user_id} does not exist..."}, status=404
+                {"error": f"User with ID {request.user.id} does not exist..."},
+                status=404,
             )
 
-        messages = Message.objects.filter(sender=user_instance)
+        messages = get_all_messages(creator=user_instance, deleted=False)
         return JsonResponse(list(messages.values()), safe=False)
 
 
-class UnreadMessagesListView(ListView):
-    def get(self, request: HttpRequest, user_id):
-        user_instance = get_user(user_id)
+class ReceivedMessagesListView(ListView, LoginRequiredMixin):
+    def get(self, request: HttpRequest):
+        user_instance = get_user(request.user.id)
         if not user_instance:
             return JsonResponse(
-                {"error": f"User with ID {user_id} does not exist..."}, status=404
+                {"error": f"User with ID {request.user.id} does not exist..."},
+                status=404,
             )
-        unread_messages = Message.objects.filter(receiver=user_instance, is_read=False)
+        messages_received = get_all_messages_received(recipient=user_instance)
+        return JsonResponse(list(messages_received.values()), safe=False)
+
+
+class UnreadMessagesListView(ListView, LoginRequiredMixin):
+    def get(self, request: HttpRequest):
+        user_instance = get_user(request.user.id)
+        if not user_instance:
+            return JsonResponse(
+                {"error": f"User with ID {request.user.id} does not exist..."},
+                status=404,
+            )
+        unread_messages = get_all_messages_received(
+            recipient=user_instance, is_read=False
+        )
         return JsonResponse(list(unread_messages.values()), safe=False)
 
 
 @method_decorator(csrf_exempt, name="dispatch")
-class DeleteMessageView(UpdateView):
+class UpdateDeleteMessageView(UpdateView, LoginRequiredMixin):
     def patch(self, request: HttpRequest, message_id):
-        return HttpResponse(request.user)
+        message_instance = get_message(message_id)
+        if message_instance:
+            message_instance.deleted = True
+            message_instance.save()
+            return HttpResponse(
+                f"Deleted message {message_instance.subject} with id {message_id}"
+            )
+
+        return HttpResponse(f"Could not find message with id {message_id}")
+
+
+@method_decorator(csrf_exempt, name="dispatch")
+class UpdateDeleteMessageRecievedView(UpdateView, LoginRequiredMixin):
+    def patch(self, request: HttpRequest, message_id):
+        recipient = get_user(request.user.id)
+        message = get_message(message_id)
+        message_received_instance = get_message_received(recipient, message)
+        if message_received_instance:
+            message_received_instance.deleted = True
+            message_received_instance.save()
+            return HttpResponse(
+                f"Deleted message {message_received_instance.message.subject} with id {message_id}"
+            )
+
+        return HttpResponse(f"Could not find message with id {message_id}")
 
 
 def index(request):
