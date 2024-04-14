@@ -1,15 +1,16 @@
-from django.urls import path
 from django.http import HttpResponse
+from django.urls import path
 
 from .views import message_views, user_views
+
 
 def root(request):
     return HttpResponse("This is the root URL for the abra home assignment")
 
+
 urlpatterns = [
     # Home
     path("", root, name="index"),
-    
     # Sent messages endpoints
     path(
         "sent/create",

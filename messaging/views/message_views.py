@@ -6,19 +6,22 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
 
 from ..forms import SendMessageForm
-from .views_utils import (create_db_message, create_db_message_sent,
-                          decode_bytes, get_all_messages,
-                          get_all_messages_received, get_message,
-                          get_message_received, get_user)
+from .views_utils import (
+    create_db_message,
+    create_db_message_sent,
+    decode_bytes,
+    get_all_messages,
+    get_all_messages_received,
+    get_message,
+    get_message_received,
+    get_user,
+)
 
 
 @method_decorator(csrf_exempt, name="dispatch")
 class SendMessageView(CreateView, LoginRequiredMixin):
     def post(self, request: HttpRequest):
-        print(request.GET.get('username'))
-        print(request.GET.get('password'))
         creator_id = request.user.id
-        
         recipient_id = request.GET.get("recipient_id")
         body_json = decode_bytes(request.body)
         body = body_json.get("body")
