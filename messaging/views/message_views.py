@@ -15,8 +15,10 @@ from .views_utils import (create_db_message, create_db_message_sent,
 @method_decorator(csrf_exempt, name="dispatch")
 class SendMessageView(CreateView, LoginRequiredMixin):
     def post(self, request: HttpRequest):
+        print(request.GET.get('username'))
+        print(request.GET.get('password'))
         creator_id = request.user.id
-
+        
         recipient_id = request.GET.get("recipient_id")
         body_json = decode_bytes(request.body)
         body = body_json.get("body")
